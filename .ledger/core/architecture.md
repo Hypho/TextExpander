@@ -56,7 +56,7 @@ TextExpander/
 ## 状态机归属
 | 状态机 | Owner 模块 | 状态值 | 变更规则 |
 |--------|------------|--------|----------|
-| HookState | Core | Active / Paused | 托盘菜单切换 |
+| HookState | Core | Active / Paused | 托盘菜单切换（HookEngine.Toggle） |
 | AppLifecycle | Program | Starting / Running / Exiting | 启动/退出生命周期 |
 
 ## 权限判断位置
@@ -78,7 +78,8 @@ TextExpander/
 | 库名 | 用途 | 版本 | 引入日期 |
 |------|------|------|---------|
 | System.Text.Json | JSON 序列化 | 内置（.NET 8） | 2026-05-13 |
-| （无第三方依赖） | | | |
+| xUnit | 测试框架 | 2.5.3 | 2026-05-13 |
+| Moq | 测试 Mock | 4.20.70 | 2026-05-13 |
 
 ## ADR 触发条件
 命中以下任一情况时，在 `.ledger/knowledge/decisions/` 记录架构决策：
