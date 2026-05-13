@@ -1,3 +1,6 @@
+using TextExpander.Config;
+using TextExpander.UI;
+
 namespace TextExpander;
 
 static class Program
@@ -6,7 +9,13 @@ static class Program
     static void Main()
     {
         ApplicationConfiguration.Initialize();
-        // TODO: HookEngine integration (build-phase: placeholder)
-        Application.Run();
+
+        var configPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "TextExpander", "rules.json");
+
+        var configManager = new ConfigManager(configPath);
+        var form = new RuleManagerForm(configManager);
+        Application.Run(form);
     }
 }
