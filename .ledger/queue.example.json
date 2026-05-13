@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "source": "draft",
+  "features": [
+    {
+      "id": "F-001",
+      "name": "todo-validation",
+      "title": "Todo input validation",
+      "priority": 1,
+      "status": "queued",
+      "phase": "待开始",
+      "depends_on": [],
+      "blocked_reason": "",
+      "artifacts": {
+        "pid": ".ledger/specs/todo-validation-pid.md",
+        "contract": ".ledger/contracts/todo-validation.md",
+        "verify": ".ledger/knowledge/todo-validation-verify.md"
+      }
+    }
+  ]
+}

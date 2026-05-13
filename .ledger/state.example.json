@@ -1,0 +1,24 @@
+{
+  "current": {
+    "feature": "",
+    "phase": "待开始",
+    "started_at": "",
+    "doing": "",
+    "blocked": "无"
+  },
+  "queue": [
+    {
+      "feature": "todo-validation"
+    }
+  ],
+  "completed": [
+    {
+      "feature": "secure-notes",
+      "started_at": "2026-04-28",
+      "completed_at": "2026-04-28",
+      "contract_count": 5,
+      "test_summary": "L1 3/3, L2 2/2",
+      "verify": "PASS"
+    }
+  ]
+}
