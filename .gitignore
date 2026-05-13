@@ -20,6 +20,10 @@ bld/
 ## Publish
 publish/
 
+## PACT protocol (development artifacts, not project source)
+.ledger/
+.claude/
+
 ## OS
 Thumbs.db
 ehthumbs.db
