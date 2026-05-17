@@ -19,6 +19,7 @@ bld/
 
 ## Publish
 publish/
+publish-framework/
 
 ## PACT protocol (development artifacts, not project source)
 .ledger/

@@ -36,6 +36,7 @@ public class TrayIcon : IDisposable
 
         _notifyIcon = new NotifyIcon
         {
+            Icon = CreateDefaultIcon(),
             Text = "TextExpander",
             ContextMenuStrip = menu,
             Visible = true
@@ -84,6 +85,16 @@ public class TrayIcon : IDisposable
     {
         _pauseResumeItem.Text = _engine.State == EngineState.Active ? "暂停" : "恢复";
         _startupItem.Checked = _bootManager.IsStartupEnabled();
+    }
+
+    private static Icon CreateDefaultIcon()
+    {
+        var bmp = new Bitmap(16, 16);
+        using var g = Graphics.FromImage(bmp);
+        g.Clear(Color.Transparent);
+        g.FillEllipse(Brushes.DodgerBlue, 1, 1, 14, 14);
+        g.DrawString("T", new Font("Arial", 9, FontStyle.Bold), Brushes.White, 2, 1);
+        return Icon.FromHandle(bmp.GetHicon());
     }
 
     public void Dispose()

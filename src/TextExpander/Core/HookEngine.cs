@@ -15,7 +15,7 @@ public class HookEngine : IDisposable
     private readonly TextReplacer _replacer;
     private readonly KeyboardHook _hook;
     private readonly VariableResolver _resolver;
-    private bool _suppressNextTerminator;
+    private bool _suppressCurrentKey;
 
     public EngineState State { get; private set; } = EngineState.Active;
     public bool IsHookInstalled => _hook.IsInstalled;
@@ -95,7 +95,7 @@ public class HookEngine : IDisposable
         var rule = _matcher.TryMatch(content);
         if (rule != null)
         {
-            _suppressNextTerminator = true;
+            _suppressCurrentKey = true;
             _replacer.Replace(rule.Abbreviation, rule.Replacement);
             _inputBuffer.Clear();
         }
@@ -107,16 +107,13 @@ public class HookEngine : IDisposable
 
     private bool ShouldSuppress(int vkCode)
     {
-        if (_suppressNextTerminator && IsTerminatorKey(vkCode))
+        if (_suppressCurrentKey)
         {
-            _suppressNextTerminator = false;
+            _suppressCurrentKey = false;
             return true;
         }
         return false;
     }
-
-    private static bool IsTerminatorKey(int vkCode) =>
-        vkCode == 0x09 || vkCode == 0x20 || vkCode == 0x0D;
 
     public void Dispose()
     {

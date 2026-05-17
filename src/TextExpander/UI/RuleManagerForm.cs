@@ -7,7 +7,7 @@ public class RuleManagerForm : Form
     private readonly ConfigManager _configManager;
     private readonly DataGridView _grid;
     private readonly Label _lblEmpty;
-    private List<Rule> _rules;
+    private List<Rule> _rules = new();
 
     public RuleManagerForm(ConfigManager configManager)
     {
