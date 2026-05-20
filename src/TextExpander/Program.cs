@@ -17,13 +17,19 @@ static class Program
             var configPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "TextExpander", "rules.json");
+            var settingsPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "TextExpander", "settings.json");
 
-            var configManager = new ConfigManager(configPath);
+            var configManager = new ConfigManager(configPath, settingsPath);
             var rules = configManager.LoadRules();
-            var engine = new HookEngine(rules);
+            var appConfig = configManager.LoadAppConfig();
+            var engine = new HookEngine(rules, appConfig: appConfig);
             var bootManager = new BootManager();
 
-            var tray = new TrayIcon(engine, bootManager, () => new RuleManagerForm(configManager));
+            var tray = new TrayIcon(engine, bootManager,
+                () => new RuleManagerForm(configManager),
+                () => new SettingsForm(configManager, bootManager, engine));
 
             if (!engine.Start())
             {

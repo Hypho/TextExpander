@@ -97,4 +97,64 @@ public class ConfigManagerTests : IDisposable
         Assert.Single(loaded);
         Assert.Equal(";test", loaded[0].Abbreviation);
     }
+
+    // --- AppConfig tests (FC-05, FC-06, NF-02) ---
+
+    [Fact]
+    public void LoadAppConfig_FileDoesNotExist_ReturnsDefaults()
+    {
+        var settingsPath = Path.Combine(_testDir, "nonexistent_settings.json");
+        var manager = new ConfigManager("dummy.json", settingsPath);
+
+        var config = manager.LoadAppConfig();
+
+        Assert.True(config.Enabled);
+        Assert.False(config.StartOnBoot);
+        Assert.Equal(new List<string> { "Tab", "Space", "Enter" }, config.TerminatorKeys);
+    }
+
+    [Fact]
+    public void LoadAppConfig_InvalidJson_ReturnsDefaults()
+    {
+        var settingsPath = Path.Combine(_testDir, "bad_settings.json");
+        File.WriteAllText(settingsPath, "not valid json!!!");
+        var manager = new ConfigManager("dummy.json", settingsPath);
+
+        var config = manager.LoadAppConfig();
+
+        Assert.True(config.Enabled);
+        Assert.Equal(new List<string> { "Tab", "Space", "Enter" }, config.TerminatorKeys);
+    }
+
+    [Fact]
+    public void SaveAppConfig_RoundTrip_PreservesValues()
+    {
+        var settingsPath = Path.Combine(_testDir, "settings.json");
+        var manager = new ConfigManager("dummy.json", settingsPath);
+        var config = new AppConfig
+        {
+            Enabled = false,
+            StartOnBoot = true,
+            TerminatorKeys = new List<string> { "Tab", "Enter" }
+        };
+
+        manager.SaveAppConfig(config);
+        var loaded = manager.LoadAppConfig();
+
+        Assert.False(loaded.Enabled);
+        Assert.True(loaded.StartOnBoot);
+        Assert.Equal(new List<string> { "Tab", "Enter" }, loaded.TerminatorKeys);
+    }
+
+    [Fact]
+    public void LoadAppConfig_CorruptedJson_SetsErrorFlag()
+    {
+        var settingsPath = Path.Combine(_testDir, "corrupted.json");
+        File.WriteAllText(settingsPath, "{ not valid json !!!");
+        var manager = new ConfigManager("dummy.json", settingsPath);
+
+        var config = manager.LoadAppConfig();
+
+        Assert.True(manager.LastAppConfigLoadHadError);
+    }
 }

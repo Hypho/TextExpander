@@ -44,6 +44,7 @@ public class KeyboardHook : IDisposable
     private readonly Action<int> _onTerminatorKey;
     private readonly Action _onBackspace;
     private readonly Func<int, bool> _shouldSuppress;
+    private HashSet<int> _terminatorVkCodes;
 
     public bool IsInstalled => _hookId != IntPtr.Zero;
 
@@ -51,13 +52,20 @@ public class KeyboardHook : IDisposable
         Action<char> onCharTyped,
         Action<int> onTerminatorKey,
         Action onBackspace,
-        Func<int, bool> shouldSuppress)
+        Func<int, bool> shouldSuppress,
+        HashSet<int> terminatorVkCodes)
     {
         _onCharTyped = onCharTyped;
         _onTerminatorKey = onTerminatorKey;
         _onBackspace = onBackspace;
         _shouldSuppress = shouldSuppress;
+        _terminatorVkCodes = terminatorVkCodes;
         _proc = HookCallback;
+    }
+
+    public void UpdateTerminators(HashSet<int> newSet)
+    {
+        _terminatorVkCodes = newSet;
     }
 
     public bool Install()
@@ -90,7 +98,7 @@ public class KeyboardHook : IDisposable
             if (_shouldSuppress(vkCode))
                 return (IntPtr)1;
 
-            if (IsTerminatorKey(vkCode))
+            if (_terminatorVkCodes.Contains(vkCode))
             {
                 _onTerminatorKey(vkCode);
             }
@@ -107,7 +115,7 @@ public class KeyboardHook : IDisposable
         return CallNextHookEx(_hookId, nCode, wParam, lParam);
     }
 
-    private static bool IsTerminatorKey(int vkCode) =>
+    private static bool DefaultIsTerminatorKey(int vkCode) =>
         vkCode == VK_TAB || vkCode == VK_SPACE || vkCode == VK_RETURN;
 
     public void Dispose()

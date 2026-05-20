@@ -9,21 +9,27 @@ public class TrayIcon : IDisposable
     private readonly HookEngine _engine;
     private readonly BootManager _bootManager;
     private readonly Func<RuleManagerForm> _formFactory;
+    private readonly Func<SettingsForm> _settingsFactory;
     private RuleManagerForm? _managerForm;
+    private SettingsForm? _settingsForm;
     private readonly ToolStripMenuItem _pauseResumeItem;
     private readonly ToolStripMenuItem _startupItem;
 
-    public TrayIcon(HookEngine engine, BootManager bootManager, Func<RuleManagerForm> formFactory)
+    public TrayIcon(HookEngine engine, BootManager bootManager, Func<RuleManagerForm> formFactory, Func<SettingsForm> settingsFactory)
     {
         _engine = engine;
         _bootManager = bootManager;
         _formFactory = formFactory;
+        _settingsFactory = settingsFactory;
 
         _pauseResumeItem = new ToolStripMenuItem("暂停");
         _pauseResumeItem.Click += (s, e) => TogglePause();
 
         var manageItem = new ToolStripMenuItem("管理规则");
         manageItem.Click += (s, e) => ShowManagerForm();
+
+        var settingsItem = new ToolStripMenuItem("设置");
+        settingsItem.Click += (s, e) => ShowSettingsForm();
 
         _startupItem = new ToolStripMenuItem("开机自启");
         _startupItem.Click += (s, e) => ToggleStartup();
@@ -32,7 +38,7 @@ public class TrayIcon : IDisposable
         exitItem.Click += (s, e) => ExitApp();
 
         var menu = new ContextMenuStrip();
-        menu.Items.AddRange(new ToolStripItem[] { _pauseResumeItem, manageItem, _startupItem, new ToolStripSeparator(), exitItem });
+        menu.Items.AddRange(new ToolStripItem[] { _pauseResumeItem, manageItem, settingsItem, _startupItem, new ToolStripSeparator(), exitItem });
 
         _notifyIcon = new NotifyIcon
         {
@@ -42,6 +48,12 @@ public class TrayIcon : IDisposable
             Visible = true
         };
 
+        _engine.OnStateChanged += OnEngineStateChanged;
+        UpdateMenuState();
+    }
+
+    private void OnEngineStateChanged(EngineState state)
+    {
         UpdateMenuState();
     }
 
@@ -63,6 +75,21 @@ public class TrayIcon : IDisposable
         {
             _managerForm.Activate();
             _managerForm.WindowState = FormWindowState.Normal;
+        }
+    }
+
+    private void ShowSettingsForm()
+    {
+        if (_settingsForm == null || _settingsForm.IsDisposed)
+        {
+            _settingsForm = _settingsFactory();
+            _settingsForm.FormClosed += (s, e) => { _settingsForm = null; };
+            _settingsForm.Show();
+        }
+        else
+        {
+            _settingsForm.Activate();
+            _settingsForm.WindowState = FormWindowState.Normal;
         }
     }
 

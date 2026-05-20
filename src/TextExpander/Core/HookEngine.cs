@@ -16,13 +16,25 @@ public class HookEngine : IDisposable
     private readonly KeyboardHook _hook;
     private readonly VariableResolver _resolver;
     private bool _suppressCurrentKey;
+    private HashSet<int> _terminatorVkCodes;
+    private EngineState _state = EngineState.Active;
 
-    public EngineState State { get; private set; } = EngineState.Active;
+    public EngineState State
+    {
+        get => _state;
+        private set
+        {
+            _state = value;
+            OnStateChanged?.Invoke(_state);
+        }
+    }
     public bool IsHookInstalled => _hook.IsInstalled;
+    public IReadOnlySet<int> CurrentTerminatorVkCodes => _terminatorVkCodes;
 
     public event Action<string>? OnNotification;
+    public event Action<EngineState>? OnStateChanged;
 
-    public HookEngine(List<Rule> rules, ITextSender? textSender = null, Func<string>? clipboardProvider = null)
+    public HookEngine(List<Rule> rules, ITextSender? textSender = null, Func<string>? clipboardProvider = null, AppConfig? appConfig = null)
     {
         _resolver = new VariableResolver(clipboardProvider);
         var sender = textSender ?? new WinTextSender();
@@ -30,11 +42,16 @@ public class HookEngine : IDisposable
         _matcher = new AbbreviationMatcher(rules);
         _replacer = new TextReplacer(sender, _resolver);
 
+        var config = appConfig ?? new AppConfig();
+        State = config.Enabled ? EngineState.Active : EngineState.Paused;
+        _terminatorVkCodes = BuildTerminatorSet(config.TerminatorKeys);
+
         _hook = new KeyboardHook(
             onCharTyped: OnCharTyped,
             onTerminatorKey: OnTerminatorKey,
             onBackspace: OnBackspace,
-            shouldSuppress: ShouldSuppress
+            shouldSuppress: ShouldSuppress,
+            terminatorVkCodes: _terminatorVkCodes
         );
     }
 
@@ -67,9 +84,43 @@ public class HookEngine : IDisposable
         }
     }
 
+    public void SetEnabled(bool enabled)
+    {
+        State = enabled ? EngineState.Active : EngineState.Paused;
+        if (enabled && !IsHookInstalled)
+            Start();
+        else if (!enabled && IsHookInstalled)
+            Stop();
+    }
+
     public void ReloadRules(List<Rule> rules)
     {
         _matcher.ReloadRules(rules);
+    }
+
+    public void ReloadTerminators(List<string> keys)
+    {
+        _terminatorVkCodes = BuildTerminatorSet(keys);
+        _hook.UpdateTerminators(_terminatorVkCodes);
+        OnNotification?.Invoke($"终止键已更新: {string.Join(", ", keys)}");
+    }
+
+    private static HashSet<int> BuildTerminatorSet(List<string>? keys)
+    {
+        if (keys == null || keys.Count == 0)
+            return new HashSet<int> { 0x09, 0x20, 0x0D };
+
+        var set = new HashSet<int>();
+        foreach (var key in keys)
+        {
+            switch (key)
+            {
+                case "Tab": set.Add(0x09); break;
+                case "Space": set.Add(0x20); break;
+                case "Enter": set.Add(0x0D); break;
+            }
+        }
+        return set.Count > 0 ? set : new HashSet<int> { 0x09, 0x20, 0x0D };
     }
 
     private void OnCharTyped(char c)
